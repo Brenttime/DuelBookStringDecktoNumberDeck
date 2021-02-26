@@ -1,0 +1,65 @@
+<html>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+		function getData(ajaxurl) { 
+			return $.ajax({
+				url: ajaxurl,
+				type: 'GET'
+			});
+		};
+
+		function download(filename, text) {
+			var element = document.createElement('a');
+			element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+			element.setAttribute('download', filename);
+
+			element.style.display = 'none';
+			document.body.appendChild(element);
+
+			element.click();
+
+			document.body.removeChild(element);
+		}
+
+		function SeperateNumberList() {
+			GetNumberList();
+		}
+
+		async function GetNumberList() {
+			var txt = document.getElementById("txt-cardlist").value;
+			var cardList = txt.replace(/\t/g,'').split('\n');
+			var cardNumbers = [];
+			console.log(cardList);
+			for(let card of cardList)
+			{
+				card = encodeURIComponent(card);
+				var url = `https://db.ygoprodeck.com/api/v7/cardinfo.php?name=${card}`;
+				try {
+					var res = await getData(url);
+					cardNumbers.push(res.data[0].id);
+				} catch(e)
+				{
+					console.log(e);
+				}
+
+			}
+			if(cardNumbers.length > 0)
+			{
+				download("deck.ydk",CreateYdkContent(cardNumbers));
+			}
+		}
+
+		function CreateYdkContent(cardNumbers) {
+			return "#created by ...\n" +
+			"#main\n"+
+			cardNumbers.join("\n") +
+			"\n#extra\n" + 
+			"\n!side\n"
+		}
+    </script>
+    <body>
+        <textarea id="txt-cardlist" rows="50" cols="50"></textarea>
+		<br />
+		<button id="btn-cardlist" onclick="GetNumberList()">submit</button>
+    </body>
+</html>
